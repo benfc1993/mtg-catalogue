@@ -20,7 +20,7 @@ async function runWorker() {
       "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz ",
     preserve_interword_spaces: "1",
   });
-  await processImages(imagePaths, async (buf, processedFileName, image) => {
+  await processImages(imagePaths, async (info, processedFileName, image) => {
     const { data } = await worker.recognize(processedFileName, {
       is_bold: true,
     });
@@ -34,18 +34,25 @@ async function runWorker() {
 
 async function findCards() {
   for (let card of cardNames) {
-    await search(card.name);
+    await search(card);
   }
-  console.log(cards);
 }
 
 async function main() {
+  fs.mkdirSync("processed", { recursive: true });
   await runWorker();
   await findCards();
-  console.log(cards.length / cardNames.length);
+  console.log(
+    `Processed ${cardNames.length}, with an accuracy of ${
+      (cards.length / cardNames.length).toFixed(2) * 100
+    }`
+  );
   cards.map((card) => {
-    if (!card.found) console.log("not found for: ", card.name);
+    if (!card.found)
+      console.log(`not found for: ${card.name}, image: ${card.rawImage}`);
   });
+  fs.appendFileSync("cards.json", JSON.stringify(cards));
+  fs.rmSync("processed", { recursive: true });
 }
 
 await main();

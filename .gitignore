@@ -2,3 +2,6 @@ cards/*
 processed/*
 node_modules/
 .vscode
+cards.json
+*.traineddata
+.DS_Store

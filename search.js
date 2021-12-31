@@ -2,9 +2,10 @@ import mtg from "mtgsdk";
 import { sortById } from "./utils.js";
 import { cards } from "./index.js";
 
-const search = async (word) => {
-  if (word.length === 0) return false;
-  const fullName = word.join(" ");
+const search = async (card) => {
+  if (card.name.length === 0) return false;
+  const fullName = card.name.join(" ");
+
   await mtg.card
     .where({ name: fullName })
     .then(async (response) => {
@@ -22,7 +23,7 @@ const search = async (word) => {
         cards.push(sortById(toSort));
         return true;
       } else {
-        await searchPerWord(word);
+        await searchPerWord(card);
       }
     })
     .catch((err) => {
@@ -31,13 +32,13 @@ const search = async (word) => {
     });
 };
 
-async function searchPerWord(fullName) {
-  let name = fullName[0];
+async function searchPerWord(card) {
+  let name = card.name[0];
   let found = new Set();
   let duplicates = new Set();
-  //TODO: If multiple results list out possible names for selection
-  for (let i = 0; i < fullName.length; i++) {
-    let word = fullName[i];
+
+  for (let i = 0; i < card.name.length; i++) {
+    let word = card.name[i];
     if (i >= 1) name += ` ${word}`;
     if (name.length > 2) {
       let current = new Set();
@@ -54,14 +55,18 @@ async function searchPerWord(fullName) {
       current.forEach((v) => found.add(v));
     }
   }
+
   if (duplicates.size === 1) {
     cards.push({ ...duplicates.values(), found: true });
   } else if (duplicates.size > 0) {
     const chosen = sortById(duplicates);
     cards.push(chosen);
   } else {
-    console.log("no matches found");
-    cards.push({ name: fullName.join(" "), found: false });
+    cards.push({
+      name: card.name.join(" "),
+      found: false,
+      rawImage: card.path,
+    });
   }
 }
 
